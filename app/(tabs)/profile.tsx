@@ -1,11 +1,19 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { LightColors } from "../../constants/Colors";
 
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: LightColors.background },
+  title: { fontWeight: "bold", marginBottom: 20, color: LightColors.primary, textAlign: "center" },
+  logout: { backgroundColor: LightColors.expense, padding: 14, borderRadius: 12 },
+  logoutText: { color: "#fff", fontWeight: "bold" },
+});
+
 export default function Profile() {
+  const { width } = useWindowDimensions();
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
+    <View style={[styles.container, { paddingHorizontal: width * 0.07 }]}> 
+      <Text style={[styles.title, { fontSize: width * 0.07 }]}>Profile</Text>
 
       <TouchableOpacity
         style={styles.logout}
@@ -16,10 +24,3 @@ export default function Profile() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: LightColors.background },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: LightColors.primary },
-  logout: { backgroundColor: LightColors.expense, padding: 14, borderRadius: 12 },
-  logoutText: { color: "#fff", fontWeight: "bold" },
-});

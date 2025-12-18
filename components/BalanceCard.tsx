@@ -1,14 +1,9 @@
-import { View, Text, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
-import { getTotalBalance } from "../services/transactionService";
-import { LightColors } from "../constants/Colors";
 
 export default function BalanceCard() {
   const [balance, setBalance] = useState(0);
-
-  useEffect(() => {
+  useFocusEffect(() => {
     getTotalBalance(setBalance);
-  }, []);
+  });
 
   return (
     <View style={styles.card}>
@@ -36,3 +31,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { LightColors } from "../constants/Colors";
+import { getTotalBalance } from "../services/transactionService";
+
