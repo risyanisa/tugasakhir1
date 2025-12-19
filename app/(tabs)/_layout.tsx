@@ -1,6 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { LightColors } from "../../constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -26,12 +26,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="statistik"
+        options={{
+          title: "Statistik",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="pie-chart" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="add"
         options={{
-          title: "Add",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="add-circle" size={26} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen

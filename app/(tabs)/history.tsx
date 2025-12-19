@@ -1,9 +1,9 @@
-import { useFocusEffect } from "@react-navigation/native";
-import { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { FlatList, SafeAreaView, StyleSheet, View, useWindowDimensions } from "react-native";
 import TransactionItem from "../../components/TransactionItem";
 import { LightColors } from "../../constants/Colors";
-import { db } from "../../services/database";
+import { deleteTransaction, getTransactions } from "../../services/transactionService";
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: LightColors.background },
@@ -12,15 +12,20 @@ const styles = StyleSheet.create({
 export default function History() {
   const [data, setData] = useState<any[]>([]);
   const { width } = useWindowDimensions();
-  useFocusEffect(() => {
-    db.withExclusiveTransactionAsync(async (tx: any) => {
-      const result = await tx.getAllAsync(
-        "SELECT * FROM transactions ORDER BY date DESC",
-        []
-      );
-      setData(result);
-    });
-  });
+
+  const fetchData = useCallback(() => {
+    getTransactions(setData);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
+
+  const handleDelete = (id: number) => {
+    deleteTransaction(id, () => fetchData());
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: LightColors.background }}>
@@ -28,7 +33,7 @@ export default function History() {
         <FlatList
           data={data}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <TransactionItem item={item} />}
+          renderItem={({ item }) => <TransactionItem item={item} onDelete={() => handleDelete(item.id)} />}
         />
       </View>
     </SafeAreaView>

@@ -1,9 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { deleteTransaction } from "../services/transactionService";
-import { Transaction } from "../types";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LightColors } from "../constants/Colors";
 
-export default function TransactionItem({ item }: { item: Transaction }) {
+interface TransactionItemProps {
+  item: any;
+  onDelete: () => void;
+}
+
+export default function TransactionItem({ item, onDelete }: TransactionItemProps) {
   return (
     <View style={styles.item}>
       <View>
@@ -20,7 +23,7 @@ export default function TransactionItem({ item }: { item: Transaction }) {
         >
           {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
         </Text>
-        <TouchableOpacity onPress={() => deleteTransaction(item.id)}>
+        <TouchableOpacity onPress={onDelete}>
           <Text style={styles.delete}>Hapus</Text>
         </TouchableOpacity>
       </View>
