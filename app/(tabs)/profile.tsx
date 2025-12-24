@@ -1,15 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
+// @ts-ignore - expo-image-picker available in runtime
+import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Alert, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { LightColors } from "../../constants/Colors";
-import { getUserProfile } from "../../services/transactionService";
+import { exportTransactionsToCsv, getUserProfile, updateUserProfile } from "../../services/transactionService";
 
 export default function Profile() {
-  const [user, setUser] = useState({ name: "User Pengguna", email: "user@financial.app" });
+  const [user, setUser] = useState({ name: "User Pengguna", email: "user@financial.app", photoUri: "" });
   const [modalVisible, setModalVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editPhotoUri, setEditPhotoUri] = useState("");
   
   useFocusEffect(
     useCallback(() => {
@@ -29,13 +45,41 @@ export default function Profile() {
   const handleEditProfile = () => {
     setEditName(user.name);
     setEditEmail(user.email);
+    setEditPhotoUri((user as any).photoUri || "");
     setModalVisible(true);
   };
 
-  const handleSaveProfile = () => {
-    setUser({ ...user, name: editName, email: editEmail });
+  const handlePickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== "granted") {
+      Alert.alert("Izin diperlukan", "Beri akses galeri untuk ubah foto profil.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setEditPhotoUri(asset.uri);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    await updateUserProfile(editName, editEmail, editPhotoUri, () => {
+      setUser({ ...user, name: editName, email: editEmail, photoUri: editPhotoUri });
+    });
     setModalVisible(false);
     Alert.alert("Berhasil", "Profil berhasil diperbarui.");
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      await exportTransactionsToCsv();
+      Alert.alert("Export CSV", "Berhasil membuat dan membagikan file CSV.");
+    } catch (e) {
+      Alert.alert("Gagal", "Export CSV gagal, coba lagi.");
+    }
   };
 
   const menuItems = [
@@ -56,7 +100,7 @@ export default function Profile() {
     {
       title: "Data Keuangan",
       items: [
-        { icon: "document-text-outline", label: "Export Laporan (PDF/Excel)", action: () => console.log("Export") },
+        { icon: "document-text-outline", label: "Export Laporan (CSV)", action: handleExportCsv },
         { icon: "trash-bin-outline", label: "Reset Semua Data", action: () => Alert.alert("Hapus Data", "Semua data transaksi akan dihapus permanen.") },
       ],
     },
@@ -75,7 +119,11 @@ export default function Profile() {
         {/* Header Profil */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={40} color="white" />
+            { (user as any).photoUri ? (
+              <Image source={{ uri: (user as any).photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={40} color="white" />
+            )}
           </View>
           <Text style={styles.name}>{user.name}</Text>
           <Text style={styles.email}>{user.email}</Text>
@@ -155,6 +203,17 @@ export default function Profile() {
               />
             </View>
 
+            <View style={[styles.inputGroup, { alignItems: "flex-start" }]}>
+              <Text style={styles.label}>Foto Profil</Text>
+              <TouchableOpacity style={styles.photoButton} onPress={handlePickImage}>
+                <Ionicons name="image-outline" size={18} color={LightColors.primary} />
+                <Text style={styles.photoButtonText}>Pilih dari galeri</Text>
+              </TouchableOpacity>
+              {editPhotoUri ? (
+                <Image source={{ uri: editPhotoUri }} style={styles.photoPreview} />
+              ) : null}
+            </View>
+
             <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
               <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
             </TouchableOpacity>
@@ -187,6 +246,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   name: {
     fontSize: 20,
@@ -306,6 +370,27 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: "#f9f9f9",
+  },
+  photoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 10,
+    backgroundColor: "#f5faff",
+  },
+  photoButtonText: {
+    color: LightColors.primary,
+    fontWeight: "600",
+  },
+  photoPreview: {
+    marginTop: 12,
+    width: 100,
+    height: 100,
+    borderRadius: 12,
   },
   saveButton: {
     backgroundColor: LightColors.primary,

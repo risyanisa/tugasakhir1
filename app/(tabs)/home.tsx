@@ -28,9 +28,9 @@ export default function Home() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: LightColors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: width * 0.07, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { fontSize: width * 0.07, marginTop: width * 0.04 }]}>Dashboard</Text>
+        <Text style={[styles.title, { fontSize: width * 0.07, marginTop: width * 0.04 }]}>Transaksi</Text>
         <Text style={{ textAlign: 'center', color: '#888', marginBottom: width * 0.04, fontSize: width * 0.045 }}>
-          Selamat datang di halaman utama. Lihat ringkasan saldo dan grafik transaksi Anda di bawah ini.
+
         </Text>
         <BalanceCard key={`balance-${refreshKey}`} />
         <MonthlyRecap key={`recap-${refreshKey}`} />

@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { expenseCategories, incomeCategories } from "../constants/Categories";
 import { LightColors } from "../constants/Colors";
 
@@ -19,6 +20,37 @@ export default function CategoryPicker(props: Props) {
   const [editIdx, setEditIdx] = React.useState<number|null>(null);
   const [editCat, setEditCat] = React.useState('');
 
+  const STORAGE_KEYS = {
+    income: "@mm_custom_income_categories",
+    expense: "@mm_custom_expense_categories",
+  } as const;
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const [inc, exp] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.income),
+          AsyncStorage.getItem(STORAGE_KEYS.expense),
+        ]);
+        if (inc) setCustomIncome(JSON.parse(inc));
+        if (exp) setCustomExpense(JSON.parse(exp));
+      } catch (e) {
+        console.log("Error loading custom categories", e);
+      }
+    })();
+  }, []);
+
+  const persistCustom = async (forType: 'income' | 'expense', list: string[]) => {
+    try {
+      await AsyncStorage.setItem(
+        STORAGE_KEYS[forType],
+        JSON.stringify(list)
+      );
+    } catch (e) {
+      console.log("Error saving custom categories", e);
+    }
+  };
+
   const baseList = type === 'income' ? incomeCategories : expenseCategories;
   const customCategories = type === 'income' ? customIncome : customExpense;
   const setCustomCategories = type === 'income' ? setCustomIncome : setCustomExpense;
@@ -27,7 +59,9 @@ export default function CategoryPicker(props: Props) {
   const handleAdd = () => {
     const val = newCat.trim();
     if (val && !list.includes(val)) {
-      setCustomCategories([...customCategories, val]);
+      const updated = [...customCategories, val];
+      setCustomCategories(updated);
+      persistCustom(type, updated);
       onSelect(val);
     }
     setNewCat('');
@@ -39,6 +73,7 @@ export default function CategoryPicker(props: Props) {
       const updated = [...customCategories];
       updated[idx] = editCat.trim();
       setCustomCategories(updated);
+      persistCustom(type, updated);
       onSelect(editCat.trim());
       setEditIdx(null);
       setEditCat('');
@@ -49,6 +84,7 @@ export default function CategoryPicker(props: Props) {
     const updated = [...customCategories];
     const deleted = updated.splice(idx, 1);
     setCustomCategories(updated);
+    persistCustom(type, updated);
     if (selected === deleted[0]) onSelect('');
     setEditIdx(null);
     setEditCat('');

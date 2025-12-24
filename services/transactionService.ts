@@ -1,3 +1,6 @@
+import { Share } from "react-native";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import { db } from "./database";
 
 // Summary pemasukkan/pengeluaran per hari
@@ -94,9 +97,18 @@ export const getAllTransactions = async (callback: (transactions: any[]) => void
 export const getUserProfile = async (callback: (user: any) => void) => {
   await db.withExclusiveTransactionAsync(async (tx: any) => {
     try {
-      const result = await tx.getAllAsync("SELECT name, email FROM users LIMIT 1");
+      const result = await tx.getAllAsync(
+        "SELECT id, username, name, email, photoUri FROM users LIMIT 1"
+      );
       if (result.length > 0) {
-        callback(result[0]);
+        const row = result[0];
+        callback({
+          id: row.id,
+          username: row.username,
+          name: row.name || row.username || "User Pengguna",
+          email: row.email || "user@financial.app",
+          photoUri: row.photoUri || "",
+        });
       }
     } catch (e) {
       console.log("Error fetching user profile:", e);
@@ -104,18 +116,87 @@ export const getUserProfile = async (callback: (user: any) => void) => {
   });
 };
 
-export const updateUserProfile = async (name: string, email: string, callback?: () => void) => {
+export const updateUserProfile = async (
+  name: string,
+  email: string,
+  photoUri: string,
+  callback?: () => void
+) => {
   await db.withExclusiveTransactionAsync(async (tx: any) => {
     try {
       const result = await tx.getAllAsync("SELECT * FROM users LIMIT 1");
       if (result.length > 0) {
-        await tx.runAsync("UPDATE users SET name = ?, email = ? WHERE id = ?", [name, email, result[0].id]);
+        await tx.runAsync(
+          "UPDATE users SET name = ?, email = ?, photoUri = ? WHERE id = ?",
+          [name, email, photoUri, result[0].id]
+        );
       } else {
-        await tx.runAsync("INSERT INTO users (name, email) VALUES (?, ?)", [name, email]);
+        const username = name || "user";
+        await tx.runAsync(
+          "INSERT INTO users (username, password, name, email, photoUri) VALUES (?, ?, ?, ?, ?)",
+          [username, "", name, email, photoUri]
+        );
       }
       if (callback) callback();
     } catch (e) {
       console.error("Error updating user profile:", e);
     }
   });
+};
+
+const escapeCsv = (value: any) => {
+  if (value === null || value === undefined) return "";
+  const stringValue = String(value);
+  if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+};
+
+export const exportTransactionsToCsv = async () => {
+  let rows: any[] = [];
+  await db.withExclusiveTransactionAsync(async (tx: any) => {
+    rows = await tx.getAllAsync(
+      "SELECT id, date, type, category, amount, note FROM transactions ORDER BY date DESC"
+    );
+  });
+
+  const header = ["id", "date", "type", "category", "amount", "note"];
+  const csv = [
+    header.join(","),
+    ...rows.map((r) =>
+      [
+        escapeCsv(r.id),
+        escapeCsv(r.date),
+        escapeCsv(r.type),
+        escapeCsv(r.category),
+        escapeCsv(r.amount),
+        escapeCsv(r.note),
+      ].join(",")
+    ),
+  ].join("\n");
+
+  const fileUri = `${FileSystem.documentDirectory || ""}transactions.csv`;
+  await FileSystem.writeAsStringAsync(fileUri, csv, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
+
+  try {
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "text/csv",
+        dialogTitle: "Export Laporan Keuangan",
+      });
+    } else {
+      await Share.share({
+        url: fileUri,
+        message: "Laporan keuangan dalam format CSV",
+      });
+    }
+  } catch (e) {
+    console.error("Error sharing CSV:", e);
+    throw e;
+  }
+
+  return fileUri;
 };

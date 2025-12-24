@@ -1,23 +1,8 @@
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: LightColors.background },
-  title: { fontWeight: "bold", marginBottom: 12, color: LightColors.primary, textAlign: "center" },
-  input: { backgroundColor: "#fff", padding: 12, borderRadius: 10, marginBottom: 10 },
-  button: { backgroundColor: LightColors.primary, padding: 14, borderRadius: 12 },
-  buttonText: { color: "#fff", textAlign: "center", fontWeight: "bold" },
-  switch: { flexDirection: "row", justifyContent: "space-around" },
-  active: { fontWeight: "bold", color: LightColors.primary },
-  inactive: { color: "#aaa" },
-});
-
-
 import { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import CategoryPicker from "../../components/CategoryPicker";
 import { LightColors } from "../../constants/Colors";
 import { db } from "../../services/database";
-
-
-
 export default function AddTransaction() {
   const [amount, setAmount] = useState("");
   // type: 'income' | 'expense' agar sesuai dengan database dan logic lain
@@ -71,5 +56,16 @@ export default function AddTransaction() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: LightColors.background },
+  title: { fontWeight: "bold", marginBottom: 12, color: LightColors.primary, textAlign: "center" },
+  input: { backgroundColor: "#fff", padding: 12, borderRadius: 10, marginBottom: 10 },
+  button: { backgroundColor: LightColors.primary, padding: 14, borderRadius: 12 },
+  buttonText: { color: "#fff", textAlign: "center", fontWeight: "bold" },
+  switch: { flexDirection: "row", justifyContent: "space-around" },
+  active: { fontWeight: "bold", color: LightColors.primary },
+  inactive: { color: "#aaa" },
+});
 
 

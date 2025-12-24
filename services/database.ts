@@ -24,5 +24,21 @@ export const initDB = async () => {
         date TEXT
       );
     `);
+
+    // Pastikan kolom profil tersedia meski tabel sudah pernah dibuat
+    const userColumns = await tx.getAllAsync("PRAGMA table_info(users)");
+    const hasName = userColumns.some((c: any) => c.name === "name");
+    const hasEmail = userColumns.some((c: any) => c.name === "email");
+    const hasPhoto = userColumns.some((c: any) => c.name === "photoUri");
+
+    if (!hasName) {
+      await tx.execAsync("ALTER TABLE users ADD COLUMN name TEXT");
+    }
+    if (!hasEmail) {
+      await tx.execAsync("ALTER TABLE users ADD COLUMN email TEXT");
+    }
+    if (!hasPhoto) {
+      await tx.execAsync("ALTER TABLE users ADD COLUMN photoUri TEXT");
+    }
   });
 };
