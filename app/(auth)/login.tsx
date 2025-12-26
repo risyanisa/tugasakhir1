@@ -29,7 +29,7 @@ export default function Login() {
       <View style={styles.heroBubbleAccent} />
 
       <View style={[styles.container, { paddingHorizontal: width * 0.07 }]}>
-        <Text style={[styles.brand, { fontSize: width * 0.065 }]}>Money Manager</Text>
+        <Text style={[styles.brand, { fontSize: width * 0.065 }]}>Everflow</Text>
         <Text style={[styles.subtitle, { fontSize: width * 0.042 }]}>
           Kelola keuanganmu lebih rapi dan terukur.
         </Text>
